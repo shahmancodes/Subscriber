@@ -13,7 +13,7 @@ app = FastAPI(title="Social Media Follower Counter", version="1.0.0")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://social-media-follower-counter.vercel.app"],  # React dev server
+    allow_origins=["http://localhost:3000", "https://followers-me.vercel.app"],  # React dev server
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
