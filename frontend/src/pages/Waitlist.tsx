@@ -59,8 +59,8 @@ const Waitlist = () => {
     try {
       // Submit for each selected platform
       await Promise.all(
-        selectedPlatforms.map(platform => 
-          submitWaitlist(email, platform)
+        selectedPlatforms.map(() => 
+          submitWaitlist(email)
         )
       );
       

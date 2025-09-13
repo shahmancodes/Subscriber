@@ -31,7 +31,7 @@ export const healthCheck = async (): Promise<{ status: string }> => {
 };
 
 // Mock API for waitlist
-export const submitWaitlist = async (email: string, platform: string): Promise<{ success: boolean }> => {
+export const submitWaitlist = async (email: string): Promise<{ success: boolean }> => {
   // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 1000));
   

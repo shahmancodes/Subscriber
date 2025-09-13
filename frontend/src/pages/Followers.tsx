@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Users, Search, RefreshCw, Instagram, Linkedin, Twitter } from 'lucide-react';
+import { Users, Search, RefreshCw, Instagram, Linkedin, Twitter, ChevronDown, Clock, Trash2 } from 'lucide-react';
 import { getFollowers } from '../api/followers';
-import { SocialMediaResponse, SocialMediaData } from '../types';
+import { SocialMediaResponse, SocialMediaData, SavedUsernames, SavedUsername } from '../types';
 import PlatformCard from '../components/PlatformCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -15,11 +15,84 @@ const Followers = () => {
   const [results, setResults] = useState<SocialMediaResponse>({});
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [savedUsernames, setSavedUsernames] = useState<SavedUsernames>({
+    instagram: [],
+    linkedin: [],
+    twitter: [],
+  });
+  const [showDropdowns, setShowDropdowns] = useState({
+    instagram: false,
+    linkedin: false,
+    twitter: false,
+  });
+
+  // Load saved usernames from localStorage on component mount
+  useEffect(() => {
+    const saved = localStorage.getItem('savedUsernames');
+    if (saved) {
+      try {
+        setSavedUsernames(JSON.parse(saved));
+      } catch (error) {
+        console.error('Error loading saved usernames:', error);
+      }
+    }
+  }, []);
+
+  // Save usernames to localStorage whenever savedUsernames changes
+  useEffect(() => {
+    localStorage.setItem('savedUsernames', JSON.stringify(savedUsernames));
+  }, [savedUsernames]);
 
   const handleInputChange = (platform: string, value: string) => {
     setUsernames(prev => ({
       ...prev,
       [platform]: value.trim()
+    }));
+  };
+
+  const saveUsername = (platform: string, username: string) => {
+    if (!username) return;
+
+    const newSavedUsername: SavedUsername = {
+      username,
+      timestamp: new Date().toISOString(),
+    };
+
+    setSavedUsernames(prev => ({
+      ...prev,
+      [platform]: [
+        newSavedUsername,
+        ...prev[platform as keyof SavedUsernames].filter(
+          saved => saved.username !== username
+        )
+      ].slice(0, 10) // Keep only last 10 usernames
+    }));
+  };
+
+  const removeSavedUsername = (platform: string, username: string) => {
+    setSavedUsernames(prev => ({
+      ...prev,
+      [platform]: prev[platform as keyof SavedUsernames].filter(
+        saved => saved.username !== username
+      )
+    }));
+  };
+
+  const selectSavedUsername = (platform: string, username: string) => {
+    setUsernames(prev => ({
+      ...prev,
+      [platform]: username
+    }));
+    setShowDropdowns(prev => ({
+      ...prev,
+      [platform]: false
+    }));
+  };
+
+  const toggleDropdown = (platform: string) => {
+    setShowDropdowns(prev => ({
+      ...prev,
+      [platform]: !prev[platform as keyof typeof showDropdowns]
     }));
   };
 
@@ -30,6 +103,13 @@ const Followers = () => {
       toast.error('Please enter at least one username');
       return;
     }
+
+    // Save usernames that are being searched
+    Object.entries(usernames).forEach(([platform, username]) => {
+      if (username) {
+        saveUsername(platform, username);
+      }
+    });
 
     setLoading(true);
     setHasSearched(true);
@@ -115,6 +195,80 @@ const Followers = () => {
     toast.success(`Updated ${updates.length} platform(s) successfully!`);
   };
 
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  const renderDropdown = (platform: string, platformIcon: React.ReactNode) => {
+    const saved = savedUsernames[platform as keyof SavedUsernames];
+    const isOpen = showDropdowns[platform as keyof typeof showDropdowns];
+
+    return (
+      <div className="relative">
+        <div className="flex">
+          <input
+            type="text"
+            value={usernames[platform as keyof typeof usernames]}
+            onChange={(e) => handleInputChange(platform, e.target.value)}
+            placeholder={platform === 'linkedin' ? 'elonmusk' : platform === 'twitter' ? 'elonmusk' : ''}
+            className="input-field rounded-r-none border-r-0"
+          />
+          <button
+            type="button"
+            onClick={() => toggleDropdown(platform)}
+            className="px-3 py-2 border border-gray-300 border-l-0 rounded-r-lg bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
+
+        {isOpen && saved.length > 0 && (
+          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="p-2 text-xs text-gray-500 border-b border-gray-200">
+              Recent usernames
+            </div>
+            {saved.map((savedUsername, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 hover:bg-gray-50 cursor-pointer group"
+                onClick={() => selectSavedUsername(platform, savedUsername.username)}
+              >
+                <div className="flex items-center flex-1">
+                  {platformIcon}
+                  <span className="ml-2 font-medium text-gray-900">
+                    {savedUsername.username}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-500 flex items-center">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {formatTimestamp(savedUsername.timestamp)}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeSavedUsername(platform, savedUsername.username);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded transition-all"
+                  >
+                    <Trash2 className="w-3 h-3 text-red-500" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -137,13 +291,7 @@ const Followers = () => {
                 <Instagram className="inline w-4 h-4 mr-2" />
                 Instagram Username
               </label>
-              <input
-                type="text"
-                value={usernames.instagram}
-                onChange={(e) => handleInputChange('instagram', e.target.value)}
-                placeholder="elonmusk"
-                className="input-field"
-              />
+              {renderDropdown('instagram', <Instagram className="w-4 h-4 text-pink-500" />)}
             </div>
 
             {/* LinkedIn */}
@@ -152,13 +300,7 @@ const Followers = () => {
                 <Linkedin className="inline w-4 h-4 mr-2" />
                 LinkedIn Username
               </label>
-              <input
-                type="text"
-                value={usernames.linkedin}
-                onChange={(e) => handleInputChange('linkedin', e.target.value)}
-                placeholder="charlie-bowsher-21380112b"
-                className="input-field"
-              />
+              {renderDropdown('linkedin', <Linkedin className="w-4 h-4 text-blue-600" />)}
             </div>
 
             {/* Twitter */}
@@ -167,13 +309,7 @@ const Followers = () => {
                 <Twitter className="inline w-4 h-4 mr-2" />
                 X (Twitter) Username
               </label>
-              <input
-                type="text"
-                value={usernames.twitter}
-                onChange={(e) => handleInputChange('twitter', e.target.value)}
-                placeholder="elonmusk"
-                className="input-field"
-              />
+              {renderDropdown('twitter', <Twitter className="w-4 h-4 text-blue-400" />)}
             </div>
           </div>
 
