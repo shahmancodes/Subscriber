@@ -5,6 +5,7 @@ import { getFollowers } from '../api/followers';
 import { SocialMediaResponse, SocialMediaData, SavedUsernames, SavedUsername } from '../types';
 import PlatformCard from '../components/PlatformCard';
 import LoadingSpinner from '../components/LoadingSpinner';
+import SEO from '../components/SEO';
 
 const Followers = () => {
   const [usernames, setUsernames] = useState({
@@ -270,137 +271,145 @@ const Followers = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Track Your Followers
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Enter your social media usernames to track your follower counts across multiple platforms
-          </p>
-        </div>
+    <>
+      <SEO 
+        title="Track Your Followers - Instagram, LinkedIn, Twitter"
+        description="Monitor your follower count across Instagram, LinkedIn, and Twitter. Get real-time updates and track your social media growth."
+        keywords="track followers, Instagram follower count, LinkedIn followers, Twitter followers, social media analytics, follower tracking"
+        url="https://followers.me/followers"
+      />
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Track Your Followers
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Enter your social media usernames to track your follower counts across multiple platforms
+            </p>
+          </div>
 
-        {/* Search Form */}
-        <div className="card max-w-4xl mx-auto mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Instagram */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Instagram className="inline w-4 h-4 mr-2" />
-                Instagram Username
-              </label>
-              {renderDropdown('instagram', <Instagram className="w-4 h-4 text-pink-500" />)}
+          {/* Search Form */}
+          <div className="card max-w-4xl mx-auto mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {/* Instagram */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Instagram className="inline w-4 h-4 mr-2" />
+                  Instagram Username
+                </label>
+                {renderDropdown('instagram', <Instagram className="w-4 h-4 text-pink-500" />)}
+              </div>
+
+              {/* LinkedIn */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Linkedin className="inline w-4 h-4 mr-2" />
+                  LinkedIn Username
+                </label>
+                {renderDropdown('linkedin', <Linkedin className="w-4 h-4 text-blue-600" />)}
+              </div>
+
+              {/* Twitter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Twitter className="inline w-4 h-4 mr-2" />
+                  X (Twitter) Username
+                </label>
+                {renderDropdown('twitter', <Twitter className="w-4 h-4 text-blue-400" />)}
+              </div>
             </div>
 
-            {/* LinkedIn */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Linkedin className="inline w-4 h-4 mr-2" />
-                LinkedIn Username
-              </label>
-              {renderDropdown('linkedin', <Linkedin className="w-4 h-4 text-blue-600" />)}
-            </div>
-
-            {/* Twitter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Twitter className="inline w-4 h-4 mr-2" />
-                X (Twitter) Username
-              </label>
-              {renderDropdown('twitter', <Twitter className="w-4 h-4 text-blue-400" />)}
+            <div className="flex justify-center">
+              <button
+                onClick={handleSearch}
+                disabled={loading}
+                className="btn-primary inline-flex items-center text-lg px-8 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-5 h-5 mr-2" />
+                    Search Followers
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
-          <div className="flex justify-center">
-            <button
-              onClick={handleSearch}
-              disabled={loading}
-              className="btn-primary inline-flex items-center text-lg px-8 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+          {/* Results */}
+          {hasSearched && (
+            <div className="max-w-6xl mx-auto">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Your Follower Counts
+                </h2>
+                {Object.keys(results).length > 0 && (
+                  <button
+                    onClick={handleUpdateAll}
+                    className="btn-secondary inline-flex items-center"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Update All
+                  </button>
+                )}
+              </div>
+
               {loading ? (
-                <>
-                  <LoadingSpinner size="sm" className="mr-2" />
-                  Searching...
-                </>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <PlatformCard
+                      key={index}
+                      data={{ platform: 'Loading', username: '', followers: 0 }}
+                      isLoading={true}
+                    />
+                  ))}
+                </div>
+              ) : Object.keys(results).length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {results.instagram && (
+                    <PlatformCard
+                      data={results.instagram}
+                      onRefresh={() => handleRefresh('instagram')}
+                      onUpdate={(count) => handleUpdateFollowers('instagram', count)}
+                    />
+                  )}
+                  {results.linkedin && (
+                    <PlatformCard
+                      data={results.linkedin}
+                      onRefresh={() => handleRefresh('linkedin')}
+                      onUpdate={(count) => handleUpdateFollowers('linkedin', count)}
+                    />
+                  )}
+                  {results.twitter && (
+                    <PlatformCard
+                      data={results.twitter}
+                      onRefresh={() => handleRefresh('twitter')}
+                      onUpdate={(count) => handleUpdateFollowers('twitter', count)}
+                    />
+                  )}
+                </div>
               ) : (
-                <>
-                  <Search className="w-5 h-5 mr-2" />
-                  Search Followers
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Results */}
-        {hasSearched && (
-          <div className="max-w-6xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Your Follower Counts
-              </h2>
-              {Object.keys(results).length > 0 && (
-                <button
-                  onClick={handleUpdateAll}
-                  className="btn-secondary inline-flex items-center"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Update All
-                </button>
+                <div className="text-center py-12">
+                  <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No results found
+                  </h3>
+                  <p className="text-gray-600">
+                    Try searching with different usernames or check if the usernames are correct
+                  </p>
+                </div>
               )}
             </div>
-
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <PlatformCard
-                    key={index}
-                    data={{ platform: 'Loading', username: '', followers: 0 }}
-                    isLoading={true}
-                  />
-                ))}
-              </div>
-            ) : Object.keys(results).length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {results.instagram && (
-                  <PlatformCard
-                    data={results.instagram}
-                    onRefresh={() => handleRefresh('instagram')}
-                    onUpdate={(count) => handleUpdateFollowers('instagram', count)}
-                  />
-                )}
-                {results.linkedin && (
-                  <PlatformCard
-                    data={results.linkedin}
-                    onRefresh={() => handleRefresh('linkedin')}
-                    onUpdate={(count) => handleUpdateFollowers('linkedin', count)}
-                  />
-                )}
-                {results.twitter && (
-                  <PlatformCard
-                    data={results.twitter}
-                    onRefresh={() => handleRefresh('twitter')}
-                    onUpdate={(count) => handleUpdateFollowers('twitter', count)}
-                  />
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No results found
-                </h3>
-                <p className="text-gray-600">
-                  Try searching with different usernames or check if the usernames are correct
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

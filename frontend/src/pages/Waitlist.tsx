@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Mail, Users, Facebook, Youtube, Music, CheckCircle, Loader2 } from 'lucide-react';
+import { Mail, CheckCircle, Users, Loader } from 'lucide-react';
 import { submitWaitlist } from '../api/followers';
 
 const Waitlist = () => {
@@ -13,21 +13,18 @@ const Waitlist = () => {
     {
       id: 'facebook',
       name: 'Facebook',
-      icon: Facebook,
       description: 'Track your Facebook page followers and engagement',
       color: 'bg-blue-600',
     },
     {
       id: 'youtube',
       name: 'YouTube',
-      icon: Youtube,
       description: 'Monitor your YouTube subscribers and video performance',
       color: 'bg-red-600',
     },
     {
       id: 'tiktok',
       name: 'TikTok',
-      icon: Music,
       description: 'Keep track of your TikTok followers and viral content',
       color: 'bg-black',
     },
@@ -173,7 +170,6 @@ const Waitlist = () => {
               </label>
               <div className="space-y-4">
                 {platforms.map((platform) => {
-                  const Icon = platform.icon;
                   const isSelected = selectedPlatforms.includes(platform.id);
                   
                   return (
@@ -189,7 +185,7 @@ const Waitlist = () => {
                       <div className="flex items-start">
                         <div className="flex-shrink-0 mr-4">
                           <div className={`p-2 rounded-lg ${platform.color}`}>
-                            <Icon className="w-6 h-6 text-white" />
+                            <Users className="w-6 h-6 text-white" />
                           </div>
                         </div>
                         <div className="flex-grow">
@@ -227,7 +223,7 @@ const Waitlist = () => {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    <Loader className="w-5 h-5 mr-2 animate-spin" />
                     Joining Waitlist...
                   </>
                 ) : (
