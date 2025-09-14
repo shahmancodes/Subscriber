@@ -20,7 +20,7 @@ app.add_middleware(
 )
 
 # RapidAPI Configuration
-RAPIDAPI_KEY = "8ad380f618msh611d922329349bfp163fa2jsn1508f2b4311e"
+RAPIDAPI_KEY = "5c28e17982msh612385525d38519p138b2ejsne33a5360c8c6"
 
 class SocialMediaRequest(BaseModel):
     instagram_username: Optional[str] = None
